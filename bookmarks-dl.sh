@@ -68,6 +68,26 @@ json_escape() {
 }
 
 
+# In case we want to look (mostly) like a normal web-browser.
+curl_browseresque() {
+	curl $@ \
+		--compressed \
+		-H 'sec-ch-ua: "Not:A-Brand";v="99", "Chromium";v="112"' \
+		-H 'sec-ch-ua-mobile: ?0' \
+		-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36' \
+		-H 'sec-ch-ua-platform: "Linux"' \
+		-H 'Accept: applincation/json' \
+		-H 'Accept-Language: en-US,en;q=0.5' \
+		-H 'Accept-Encoding: gzip, deflate, br' \
+		-H 'DNT: 1' \
+		-H 'Connection: keep-alive' \
+		-H 'Sec-Fetch-Dest: empty' \
+		-H 'Sec-Fetch-Mode: cors' \
+		-H 'Sec-Fetch-Site: same-origin' \
+		-H 'TE: trailers'
+}
+
+
 SOURCE_NAME="$1"
 case "$SOURCE_NAME" in
 	--list|list)
