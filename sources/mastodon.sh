@@ -46,7 +46,7 @@ fetch_bookmarks() {
 source_start() {
 	local auth=""
 	local domain=""
-	while getopts 'ha:u:d:' arg; do
+	while getopts 'hf:a:u:d:' arg; do
 		case $arg in
 			h)
 				usage
