@@ -37,9 +37,6 @@ fetch_bookmarks() {
 	local rest="$4"
 	if test -z "$offset"; then
 		offset=0
-		printf '[' # Start the JSON array…
-	else
-		printf ',' # Continue the array. (See printf in bookmarks_parse)
 	fi
 	# We want to download private *and* public bookmarks; start with private.
 	if test -z "$rest"; then
@@ -65,9 +62,6 @@ fetch_bookmarks() {
 	# When finished downloading private bookmarks, start downloading public ones.
 	elif test "$rest" = "hide"; then
 		fetch_bookmarks "$user_id" "$auth" "0" "show"
-	# When finished downloading all bookmarks, close the JSON array.
-	else
-		printf ']'
 	fi
 }
 
@@ -100,9 +94,5 @@ source_start() {
 
 
 bookmarks_parse() {
-	jq '.body.works[] | { "title": .title, "href": "https://www.pixiv.net/en/artworks/\(.id)", "desc": .alt }' \
-		| sed 's/^}/},/' \
-		| head -n-1
-	# The last element might be the last, so don’t add a comma after it.
-	printf '}'
+	jq -r '.body.works[] | "https://www.pixiv.net/en/artworks/\(.id)\t\(.title)\t\(.alt)\t"'
 }

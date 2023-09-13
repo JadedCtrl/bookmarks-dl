@@ -25,7 +25,6 @@ fetch_bookmarks() {
 	local url="$3"
 	if test -z "$url"; then
 		url="https://$domain/api/v1/bookmarks?limit=40"
-		printf "[" # Start the JSON array
 	fi
 
 	local header_file="$(mktemp)"
@@ -37,8 +36,7 @@ fetch_bookmarks() {
 	local next_url="$(header_next_link "$header_file")"
 	rm "$header_file"
 	if test -n "$next_url"; then
-		fetch_bookmarks "$auth" "$domain" "$next_url" \
-			| sed 's/^},},/}]/' # Two },}, means end of JSON array
+		fetch_bookmarks "$auth" "$domain" "$next_url"
 	fi
 }
 
@@ -72,10 +70,16 @@ source_start() {
 
 # Given a page of /api/v1/bookmarks, parse into the simple bookmarks-dl format
 bookmarks_parse() {
-	jq -r '.[] | { "desc": .content, "href": .url, "added": .created_at }' \
-		| sed 's/^}/},/' \
-		| head -n-1
-	printf '},'
+	local bookmark_lines="$(jq -r '.[] | "\(.url)\t\t\(@json "\(.content)")\t\(.created_at)"')"
+	local IFS="
+"
+	for bookmark in $bookmark_lines; do
+		local url="$(echo "$bookmark" | awk -F '\t' '{print $1}')"
+		local date="$(echo "$bookmark" | awk -F '\t' '{print $4}')"
+		local desc="$(echo "$bookmark" | bookmark_line_desc)"
+		local title="$(echo "$desc" | head -c40)"
+		printf '%s\t%s\t%s\t%s\n' "$url" "$title" "$desc" "$date"
+    done
 }
 
 
@@ -88,4 +92,14 @@ header_next_link() {
 		| tr '[A-Z]' '[a-z]' \
 		| sed 's/>;rel="next",.*//' \
 		| sed 's/link:<//'
+}
+
+
+# Given a tab-delimited bookmark line, process HTML description into plain-text.
+bookmark_line_desc() {
+	awk -F '\t' '{print $3}' \
+		| sed 's%^"%%' \
+		| sed 's%"$%%' \
+		| html_text_deescape \
+		| tr '\n\t' '  '
 }

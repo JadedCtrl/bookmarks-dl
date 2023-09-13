@@ -84,10 +84,18 @@ source_start() {
 # ————————————————————————————————————————
 # MISC. UTILS
 # ————————————————————————————————————————
+# Trims preceding and trailing spaces of a string.
+# Be warned: Uses extended regexps, a GNUism!
+trim_spaces() {
+	sed -E 's%^[[:space:]]+%%g' \
+		| sed -E 's%[[:space:]]+$%%g'
+}
+
+
 # Given some HTML, return it’s plain-text and deescaped form.
 html_text_deescape() {
-	lynx -dump -stdin \
-		| xargs echo    # Trim trailing/preceding whitespace.
+	lynx -stdin -dump -nolist --assume_charset=utf8 --display_charset=utf8 \
+		| trim_spaces
 }
 
 
